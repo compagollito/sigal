@@ -1,0 +1,61 @@
+# Entorno virtual
+venv/
+ENV/
+env/
+.venv/
+.ENV/
+
+# Archivos de entorno y claves
+.env
+
+# Cachés de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de log o debugging
+*.log
+*.tmp
+
+# Archivos de base de datos temporales o locales
+*.sqlite3
+*.db
+
+# Configuraciones de IDE (VSCode, PyCharm, etc.)
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de instalación de paquetes
+*.egg
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+site/
+
+# Archivos exportados
+/exported_files/
+*.pdf
+*.csv
+*.xlsx
+
+# Archivos temporales de Tkinter
+*.png
+*.jpg
+*.gif
+
+# Otros
+coverage/
+htmlcov/
+*.mo
+*.pot
+
+# Mac/Linux swap files
+*.swp
+*.swo
