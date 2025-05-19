@@ -4,6 +4,7 @@ from bson.objectid import ObjectId
 db = get_db()
 laboratory_collection = db["laboratorys"]
 
+
 class LaboratorioRepository:
 
     @staticmethod
@@ -22,8 +23,7 @@ class LaboratorioRepository:
     @staticmethod
     def update_laboratory(lab_id: str, new_data: dict) -> bool:
         result = laboratory_collection.update_one(
-            {"_id": ObjectId(lab_id)},
-            {"$set": new_data}
+            {"_id": ObjectId(lab_id)}, {"$set": new_data}
         )
         return result.modified_count > 0
 
