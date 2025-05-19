@@ -7,13 +7,14 @@ from pydantic import BaseModel, EmailStr, Field
 class UserValidator(BaseModel):
     first_name: str = Field(..., min_length=3)
     last_name: str = Field(..., min_length=3)
-    middle_name: str = None
+    middle_name: Optional[str] = None
     email: EmailStr
     password: str = Field(..., min_length=8)
-    role: str = Field(..., min_length=3)
+    role: str = Field(..., min_length=1)
     authorized_labs: List[ObjectId] = []
-    active: bool = True
+    status: str
     registration_date: Optional[datetime] = None
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class User:
@@ -21,29 +22,30 @@ class User:
         self,
         first_name: str,
         last_name: str,
-        middle_name: str,
         email: str,
         password: str,
         role: str,
+        status: str,
+        middle_name: Optional[str] = None,
         authorized_labs: List[ObjectId] = [],
-        active: bool = True,
-        registration_date: datetime = None,
-        _id: Optional[ObjectId] = None
+        registration_date: Optional[datetime] = None,
+        _id: Optional[ObjectId] = None,
     ):
-        # Validación con Pydantic
-        validated = UserValidator(
-            first_name=first_name,
-            last_name=last_name,
-            middle_name=middle_name,
-            email=email,
-            password=password,
-            role=role,
-            authorized_labs=authorized_labs,
-            active=active,
-            registration_date=registration_date
-        )
+        validated_data = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "middle_name": middle_name,
+            "email": email,
+            "password": password,
+            "role": role,
+            "authorized_labs": authorized_labs,
+            "status": status,
+            "registration_date": registration_date,
+        }
 
-        self.__id = _id
+        validated = UserValidator(**validated_data)
+
+        self.__id = _id if _id is not None else ObjectId()
         self.__first_name = validated.first_name
         self.__last_name = validated.last_name
         self.__middle_name = validated.middle_name
@@ -51,8 +53,12 @@ class User:
         self.__password = validated.password
         self.__role = validated.role
         self.__authorized_labs = validated.authorized_labs
-        self.__active = validated.active
-        self.__registration_date = validated.registration_date or datetime.utcnow()
+        self.__status = validated.status
+        self.__registration_date = (
+            validated.registration_date
+            if validated.registration_date is not None
+            else datetime.utcnow()
+        )
 
     # Getters
     def get_id(self) -> Optional[ObjectId]:
@@ -79,8 +85,8 @@ class User:
     def get_authorized_labs(self) -> List[ObjectId]:
         return self.__authorized_labs
 
-    def is_active(self) -> bool:
-        return self.__active
+    def get_status(self) -> str:
+        return self.__status
 
     def get_registration_date(self) -> datetime:
         return self.__registration_date
@@ -95,21 +101,30 @@ class User:
             "password": self.__password,
             "role": self.__role,
             "authorized_labs": self.__authorized_labs,
-            "active": self.__active,
-            "registration_date": self.__registration_date
+            "status": self.__status,
+            "registration_date": self.__registration_date,
         }
 
     @staticmethod
-    def from_dict(data: dict) -> 'User':
+    def from_dict(data: dict) -> "User":
+        auth_labs_from_db = data.get("authorized_labs", [])
+        status_raw = data.get("status", "Activo")
+
+        if isinstance(status_raw, bool):
+            status = "Activo" if status_raw else "Inactivo"
+        elif isinstance(status_raw, str):
+            status = status_raw
+        else:
+            status = "Activo"
         return User(
+            _id=data.get("_id"),
             first_name=data.get("first_name"),
             last_name=data.get("last_name"),
             middle_name=data.get("middle_name"),
             email=data.get("email"),
             password=data.get("password"),
             role=data.get("role"),
-            authorized_labs=data.get("authorized_labs", []),
-            active=data.get("active", True),
+            authorized_labs=auth_labs_from_db,
+            status=status,
             registration_date=data.get("registration_date"),
-            _id=data.get("_id")
         )
